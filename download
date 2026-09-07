@@ -1,0 +1,15 @@
+# Gizli bilgiler - ASLA commit edilmez
+.env
+
+# Loglar ve yerel üretilen raporlar
+# (data/ bilerek commit edilir: GitHub Actions akışı veritabanını çalışmalar
+# arasında repoda saklar; docs/ da GitHub Pages sitesi olarak commit edilir.)
+logs/
+reports/
+report_preview.html
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
