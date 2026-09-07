@@ -29,6 +29,11 @@ def get_site_data():
 
 
 data = get_site_data()
+if not data["ok"]:
+    # Hata sonucu önbellekte KALMASIN: veritabanı sonradan geldiğinde
+    # (örn. Actions'ın ilk commit'i) bir sonraki sayfa yenilemesi taze
+    # okuma yapsın.
+    get_site_data.clear()
 
 # ---------------------------------------------------------------- kenar çubuğu
 with st.sidebar:
