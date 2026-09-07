@@ -1,0 +1,55 @@
+# Her sabah GitHub'ın bulut sunucusunda raporu üretir ve GitHub Pages
+# sitesini günceller. Bilgisayarınızın açık olması GEREKMEZ.
+#
+# Saat: 05:00 UTC = 08:00 Türkiye saati (hafta içi her gün).
+# İlk kurulumdan sonra Actions sekmesinden "Run workflow" ile elle de
+# çalıştırabilirsiniz.
+name: Gunluk KAP + TEFAS Raporu
+
+on:
+  schedule:
+    - cron: "0 5 * * 1-5"   # hafta içi 08:00 (TR)
+  workflow_dispatch: {}      # elle çalıştırma düğmesi
+
+permissions:
+  contents: write            # rapor ve veritabanını repoya geri yazabilmek için
+
+concurrency:
+  group: daily-report
+  cancel-in-progress: false
+
+jobs:
+  rapor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Depoyu indir
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bagimliliklari kur
+        run: pip install -r requirements.txt
+
+      - name: Raporu uret (site docs/ klasorune yazilir)
+        env:
+          REPORTS_DIR: docs
+        # SMTP ayari yok -> e-posta otomatik atlanir, yalnizca site uretilir.
+        # KAP/TEFAS'a erisilemezse "VERI ALINAMADI" sayfasi uretilir ve is
+        # yine de siteyi gunceller (eski veri yeni gibi gosterilmez).
+        run: python main.py || true
+
+      - name: Siteyi ve veritabanini kaydet
+        run: |
+          git config user.name "kap-monitor-bot"
+          git config user.email "actions@github.com"
+          git add -A docs data
+          if git diff --cached --quiet; then
+            echo "Degisiklik yok."
+          else
+            git commit -m "Gunluk rapor: $(date -u +%Y-%m-%d)"
+            git push
+          fi
